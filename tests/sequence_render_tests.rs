@@ -15,7 +15,10 @@ fn verify_sequence<P: AsRef<Path>>(path: P, use_ascii: bool) {
     if expected != actual {
         let expected_dbg = testutil::visualize_whitespace(&expected);
         let actual_dbg = testutil::visualize_whitespace(&actual);
-        panic!("Sequence diagram mismatch\nExpected:\n{}\nActual:\n{}", expected_dbg, actual_dbg);
+        panic!(
+            "Sequence diagram mismatch\nExpected:\n{}\nActual:\n{}",
+            expected_dbg, actual_dbg
+        );
     }
 }
 
@@ -83,6 +86,11 @@ fn test_sequence_ascii_smoke() {
         for participant in &diagram.participants {
             assert!(output.contains(&participant.label));
         }
-        assert!(!output.contains('┌') && !output.contains('┐') && !output.contains('└') && !output.contains('┘'));
+        assert!(
+            !output.contains('┌')
+                && !output.contains('┐')
+                && !output.contains('└')
+                && !output.contains('┘')
+        );
     }
 }

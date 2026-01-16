@@ -38,7 +38,12 @@ pub fn read_test_case<P: AsRef<Path>>(path: P) -> Result<TestCase, String> {
                         .as_str()
                         .parse::<i32>()
                         .map_err(|e| e.to_string())?;
-                    if caps.get(1).unwrap().as_str().eq_ignore_ascii_case("paddingX") {
+                    if caps
+                        .get(1)
+                        .unwrap()
+                        .as_str()
+                        .eq_ignore_ascii_case("paddingX")
+                    {
                         padding_x = value;
                     } else {
                         padding_y = value;

@@ -17,7 +17,10 @@ fn verify_map<P: AsRef<Path>>(path: P, use_ascii: bool) {
     if tc.expected != output {
         let expected = testutil::visualize_whitespace(&tc.expected);
         let actual = testutil::visualize_whitespace(&output);
-        panic!("Map didn't match\nExpected:\n{}\nActual:\n{}", expected, actual);
+        panic!(
+            "Map didn't match\nExpected:\n{}\nActual:\n{}",
+            expected, actual
+        );
     }
 }
 
@@ -57,7 +60,16 @@ fn test_graph_use_ascii_config() {
     unicode_config.use_ascii = false;
     let unicode_output = render_diagram(input, &unicode_config).expect("render unicode");
 
-    assert_ne!(ascii_output, unicode_output, "ASCII and Unicode outputs should differ");
-    assert!(!ascii_output.contains('┌') && !ascii_output.contains('─') && !ascii_output.contains('│'));
-    assert!(unicode_output.contains('┌') || unicode_output.contains('─') || unicode_output.contains('│'));
+    assert_ne!(
+        ascii_output, unicode_output,
+        "ASCII and Unicode outputs should differ"
+    );
+    assert!(
+        !ascii_output.contains('┌') && !ascii_output.contains('─') && !ascii_output.contains('│')
+    );
+    assert!(
+        unicode_output.contains('┌')
+            || unicode_output.contains('─')
+            || unicode_output.contains('│')
+    );
 }

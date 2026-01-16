@@ -238,10 +238,7 @@ fn mermaid_to_graph_properties(
     config: &Config,
 ) -> Result<GraphProperties, String> {
     let newline_re = Regex::new(r"\n|\\n").unwrap();
-    let raw_lines: Vec<String> = newline_re
-        .split(mermaid)
-        .map(|s| s.to_string())
-        .collect();
+    let raw_lines: Vec<String> = newline_re.split(mermaid).map(|s| s.to_string()).collect();
 
     let mut lines: Vec<String> = Vec::new();
     for mut line in raw_lines {
@@ -311,7 +308,7 @@ fn mermaid_to_graph_properties(
             return Err(format!(
                 "unsupported graph type '{}'. Supported types: graph TD, graph TB, graph LR, flowchart TD, flowchart TB, flowchart LR",
                 other
-            ))
+            ));
         }
     }
     lines.remove(0);
@@ -390,8 +387,12 @@ impl GraphProperties {
         if let Some(caps) = arrow_re.captures(line) {
             let lhs = caps.get(1).unwrap().as_str();
             let rhs = caps.get(2).unwrap().as_str();
-            let left_nodes = self.parse_string(lhs).unwrap_or_else(|_| vec![parse_node(lhs)]);
-            let right_nodes = self.parse_string(rhs).unwrap_or_else(|_| vec![parse_node(rhs)]);
+            let left_nodes = self
+                .parse_string(lhs)
+                .unwrap_or_else(|_| vec![parse_node(lhs)]);
+            let right_nodes = self
+                .parse_string(rhs)
+                .unwrap_or_else(|_| vec![parse_node(rhs)]);
             return Ok(set_arrow(&left_nodes, &right_nodes, &mut self.data));
         }
 
@@ -399,8 +400,12 @@ impl GraphProperties {
             let lhs = caps.get(1).unwrap().as_str();
             let label = caps.get(2).unwrap().as_str();
             let rhs = caps.get(3).unwrap().as_str();
-            let left_nodes = self.parse_string(lhs).unwrap_or_else(|_| vec![parse_node(lhs)]);
-            let right_nodes = self.parse_string(rhs).unwrap_or_else(|_| vec![parse_node(rhs)]);
+            let left_nodes = self
+                .parse_string(lhs)
+                .unwrap_or_else(|_| vec![parse_node(lhs)]);
+            let right_nodes = self
+                .parse_string(rhs)
+                .unwrap_or_else(|_| vec![parse_node(rhs)]);
             return Ok(set_arrow_with_label(
                 &left_nodes,
                 &right_nodes,
@@ -420,8 +425,12 @@ impl GraphProperties {
         if let Some(caps) = amp_re.captures(line) {
             let lhs = caps.get(1).unwrap().as_str();
             let rhs = caps.get(2).unwrap().as_str();
-            let left_nodes = self.parse_string(lhs).unwrap_or_else(|_| vec![parse_node(lhs)]);
-            let right_nodes = self.parse_string(rhs).unwrap_or_else(|_| vec![parse_node(rhs)]);
+            let left_nodes = self
+                .parse_string(lhs)
+                .unwrap_or_else(|_| vec![parse_node(lhs)]);
+            let right_nodes = self
+                .parse_string(rhs)
+                .unwrap_or_else(|_| vec![parse_node(rhs)]);
             let mut merged = left_nodes;
             merged.extend(right_nodes);
             return Ok(merged);
@@ -467,20 +476,31 @@ fn set_arrow_with_label(
     label: &str,
     data: &mut IndexMap<String, Vec<TextEdge>>,
 ) -> Vec<TextNode> {
-    debug!("Setting arrow from {:?} to {:?} with label {}", lhs, rhs, label);
+    debug!(
+        "Setting arrow from {:?} to {:?} with label {}",
+        lhs, rhs, label
+    );
     for l in lhs {
         for r in rhs {
-            set_data(l, TextEdge {
-                parent: l.clone(),
-                child: r.clone(),
-                label: label.to_string(),
-            }, data);
+            set_data(
+                l,
+                TextEdge {
+                    parent: l.clone(),
+                    child: r.clone(),
+                    label: label.to_string(),
+                },
+                data,
+            );
         }
     }
     rhs.to_vec()
 }
 
-fn set_arrow(lhs: &[TextNode], rhs: &[TextNode], data: &mut IndexMap<String, Vec<TextEdge>>) -> Vec<TextNode> {
+fn set_arrow(
+    lhs: &[TextNode],
+    rhs: &[TextNode],
+    data: &mut IndexMap<String, Vec<TextEdge>>,
+) -> Vec<TextNode> {
     set_arrow_with_label(lhs, rhs, "", data)
 }
 
@@ -659,7 +679,8 @@ impl Graph {
             }
         }
 
-        let should_separate = self.graph_direction == "LR" && has_external_roots && has_subgraph_roots_with_edges;
+        let should_separate =
+            self.graph_direction == "LR" && has_external_roots && has_subgraph_roots_with_edges;
         let mut external_root_nodes = Vec::new();
         let mut subgraph_root_nodes = Vec::new();
         if should_separate {
@@ -676,9 +697,21 @@ impl Graph {
 
         for idx in &external_root_nodes {
             let coord = if self.graph_direction == "LR" {
-                self.reserve_spot_in_grid(*idx, GridCoord { x: 0, y: highest_position_per_level[0] })
+                self.reserve_spot_in_grid(
+                    *idx,
+                    GridCoord {
+                        x: 0,
+                        y: highest_position_per_level[0],
+                    },
+                )
             } else {
-                self.reserve_spot_in_grid(*idx, GridCoord { x: highest_position_per_level[0], y: 0 })
+                self.reserve_spot_in_grid(
+                    *idx,
+                    GridCoord {
+                        x: highest_position_per_level[0],
+                        y: 0,
+                    },
+                )
             };
             self.nodes[*idx].grid_coord = Some(coord);
             highest_position_per_level[0] += 4;
@@ -804,7 +837,9 @@ impl Graph {
 
     fn increase_grid_size_for_path(&mut self, path: &[GridCoord]) {
         for coord in path {
-            self.column_width.entry(coord.x).or_insert(self.padding_x / 2);
+            self.column_width
+                .entry(coord.x)
+                .or_insert(self.padding_x / 2);
             self.row_height.entry(coord.y).or_insert(self.padding_y / 2);
         }
     }
@@ -997,11 +1032,22 @@ impl Graph {
             label_drawings.push(label);
         }
 
-        self.drawing = self.merge_drawings(&self.drawing, DrawingCoord { x: 0, y: 0 }, &line_drawings);
-        self.drawing = self.merge_drawings(&self.drawing, DrawingCoord { x: 0, y: 0 }, &corner_drawings);
-        self.drawing = self.merge_drawings(&self.drawing, DrawingCoord { x: 0, y: 0 }, &arrow_head_drawings);
-        self.drawing = self.merge_drawings(&self.drawing, DrawingCoord { x: 0, y: 0 }, &box_start_drawings);
-        self.drawing = self.merge_drawings(&self.drawing, DrawingCoord { x: 0, y: 0 }, &label_drawings);
+        self.drawing =
+            self.merge_drawings(&self.drawing, DrawingCoord { x: 0, y: 0 }, &line_drawings);
+        self.drawing =
+            self.merge_drawings(&self.drawing, DrawingCoord { x: 0, y: 0 }, &corner_drawings);
+        self.drawing = self.merge_drawings(
+            &self.drawing,
+            DrawingCoord { x: 0, y: 0 },
+            &arrow_head_drawings,
+        );
+        self.drawing = self.merge_drawings(
+            &self.drawing,
+            DrawingCoord { x: 0, y: 0 },
+            &box_start_drawings,
+        );
+        self.drawing =
+            self.merge_drawings(&self.drawing, DrawingCoord { x: 0, y: 0 }, &label_drawings);
 
         self.draw_subgraph_labels();
 
@@ -1020,10 +1066,22 @@ impl Graph {
     fn draw_edge(&self, edge_idx: usize) -> (Drawing, Drawing, Drawing, Drawing, Drawing) {
         let edge = &self.edges[edge_idx];
         if edge.path.is_empty() {
-            return (mk_drawing(0, 0), mk_drawing(0, 0), mk_drawing(0, 0), mk_drawing(0, 0), mk_drawing(0, 0));
+            return (
+                mk_drawing(0, 0),
+                mk_drawing(0, 0),
+                mk_drawing(0, 0),
+                mk_drawing(0, 0),
+                mk_drawing(0, 0),
+            );
         }
-        let from = self.nodes[edge.from].grid_coord.unwrap().direction(edge.start_dir);
-        let to = self.nodes[edge.to].grid_coord.unwrap().direction(edge.end_dir);
+        let from = self.nodes[edge.from]
+            .grid_coord
+            .unwrap()
+            .direction(edge.start_dir);
+        let to = self.nodes[edge.to]
+            .grid_coord
+            .unwrap()
+            .direction(edge.end_dir);
         self.draw_arrow(from, to, edge)
     }
 
@@ -1208,7 +1266,9 @@ impl Graph {
     }
 
     fn get_node_subgraph(&self, node_idx: usize) -> Option<usize> {
-        self.subgraphs.iter().position(|sg| sg.nodes.iter().any(|idx| *idx == node_idx))
+        self.subgraphs
+            .iter()
+            .position(|sg| sg.nodes.iter().any(|idx| *idx == node_idx))
     }
 
     fn has_incoming_edge_from_outside_subgraph(&self, node_idx: usize) -> bool {
@@ -1250,7 +1310,9 @@ impl Graph {
                 }
             }
             if other_has_external {
-                if let (Some(other_coord), Some(node_coord)) = (other_coord, self.nodes[node_idx].grid_coord) {
+                if let (Some(other_coord), Some(node_coord)) =
+                    (other_coord, self.nodes[node_idx].grid_coord)
+                {
                     if other_coord.y < node_coord.y {
                         return false;
                     }
@@ -1268,14 +1330,26 @@ impl Graph {
         increase_size(drawing, max_x - 1, max_y - 1);
     }
 
-    fn draw_arrow(&self, from: GridCoord, to: GridCoord, edge: &Edge) -> (Drawing, Drawing, Drawing, Drawing, Drawing) {
+    fn draw_arrow(
+        &self,
+        from: GridCoord,
+        to: GridCoord,
+        edge: &Edge,
+    ) -> (Drawing, Drawing, Drawing, Drawing, Drawing) {
         if edge.path.is_empty() {
-            return (mk_drawing(0, 0), mk_drawing(0, 0), mk_drawing(0, 0), mk_drawing(0, 0), mk_drawing(0, 0));
+            return (
+                mk_drawing(0, 0),
+                mk_drawing(0, 0),
+                mk_drawing(0, 0),
+                mk_drawing(0, 0),
+                mk_drawing(0, 0),
+            );
         }
         let label = self.draw_arrow_label(edge);
         let (path, lines_drawn, line_dirs) = self.draw_path(&edge.path);
         let box_start = self.draw_box_start(&edge.path, &lines_drawn[0]);
-        let arrow_head = self.draw_arrow_head(lines_drawn.last().unwrap(), *line_dirs.last().unwrap());
+        let arrow_head =
+            self.draw_arrow_head(lines_drawn.last().unwrap(), *line_dirs.last().unwrap());
         let corners = self.draw_corners(&edge.path);
         (path, box_start, arrow_head, corners, label)
     }
@@ -1292,7 +1366,16 @@ impl Graph {
                 previous = *next;
                 continue;
             }
-            let dir = determine_direction(GenericCoord { x: previous.x, y: previous.y }, GenericCoord { x: next.x, y: next.y });
+            let dir = determine_direction(
+                GenericCoord {
+                    x: previous.x,
+                    y: previous.y,
+                },
+                GenericCoord {
+                    x: next.x,
+                    y: next.y,
+                },
+            );
             let mut line = self.draw_line(&mut drawing, prev_dc, next_dc, 1, -1);
             if line.is_empty() {
                 line.push(prev_dc);
@@ -1312,7 +1395,13 @@ impl Graph {
         offset_from: i32,
         offset_to: i32,
     ) -> Vec<DrawingCoord> {
-        let dir = determine_direction(GenericCoord { x: from.x, y: from.y }, GenericCoord { x: to.x, y: to.y });
+        let dir = determine_direction(
+            GenericCoord {
+                x: from.x,
+                y: from.y,
+            },
+            GenericCoord { x: to.x, y: to.y },
+        );
         let mut drawn = Vec::new();
         if !self.use_ascii {
             match dir {
@@ -1461,8 +1550,14 @@ impl Graph {
         }
         let from = first_line[0];
         let dir = determine_direction(
-            GenericCoord { x: path[0].x, y: path[0].y },
-            GenericCoord { x: path[1].x, y: path[1].y },
+            GenericCoord {
+                x: path[0].x,
+                y: path[0].y,
+            },
+            GenericCoord {
+                x: path[1].x,
+                y: path[1].y,
+            },
         );
         match dir {
             d if d == UP => set_cell(&mut drawing, from.x, from.y + 1, "┴"),
@@ -1481,7 +1576,16 @@ impl Graph {
         }
         let from = line[0];
         let last = line[line.len() - 1];
-        let mut dir = determine_direction(GenericCoord { x: from.x, y: from.y }, GenericCoord { x: last.x, y: last.y });
+        let mut dir = determine_direction(
+            GenericCoord {
+                x: from.x,
+                y: from.y,
+            },
+            GenericCoord {
+                x: last.x,
+                y: last.y,
+            },
+        );
         if line.len() == 1 || dir == MIDDLE {
             dir = fallback;
         }
@@ -1534,21 +1638,39 @@ impl Graph {
             let coord = path[idx];
             let drawing_coord = self.grid_to_drawing_coord(coord, None);
             let prev_dir = determine_direction(
-                GenericCoord { x: path[idx - 1].x, y: path[idx - 1].y },
-                GenericCoord { x: coord.x, y: coord.y },
+                GenericCoord {
+                    x: path[idx - 1].x,
+                    y: path[idx - 1].y,
+                },
+                GenericCoord {
+                    x: coord.x,
+                    y: coord.y,
+                },
             );
             let next_dir = determine_direction(
-                GenericCoord { x: coord.x, y: coord.y },
-                GenericCoord { x: path[idx + 1].x, y: path[idx + 1].y },
+                GenericCoord {
+                    x: coord.x,
+                    y: coord.y,
+                },
+                GenericCoord {
+                    x: path[idx + 1].x,
+                    y: path[idx + 1].y,
+                },
             );
             let corner = if !self.use_ascii {
                 if (prev_dir == RIGHT && next_dir == DOWN) || (prev_dir == UP && next_dir == LEFT) {
                     "┐"
-                } else if (prev_dir == RIGHT && next_dir == UP) || (prev_dir == DOWN && next_dir == LEFT) {
+                } else if (prev_dir == RIGHT && next_dir == UP)
+                    || (prev_dir == DOWN && next_dir == LEFT)
+                {
                     "┘"
-                } else if (prev_dir == LEFT && next_dir == DOWN) || (prev_dir == UP && next_dir == RIGHT) {
+                } else if (prev_dir == LEFT && next_dir == DOWN)
+                    || (prev_dir == UP && next_dir == RIGHT)
+                {
                     "┌"
-                } else if (prev_dir == LEFT && next_dir == UP) || (prev_dir == DOWN && next_dir == RIGHT) {
+                } else if (prev_dir == LEFT && next_dir == UP)
+                    || (prev_dir == DOWN && next_dir == RIGHT)
+                {
                     "└"
                 } else {
                     "+"
@@ -1579,7 +1701,10 @@ impl Graph {
 
     fn get_path(&self, from: GridCoord, to: GridCoord) -> Result<Vec<GridCoord>, String> {
         let mut pq = BinaryHeap::new();
-        pq.push(QueueItem { coord: from, priority: 0 });
+        pq.push(QueueItem {
+            coord: from,
+            priority: 0,
+        });
         let mut cost_so_far: HashMap<GridCoord, i32> = HashMap::new();
         let mut came_from: HashMap<GridCoord, Option<GridCoord>> = HashMap::new();
         cost_so_far.insert(from, 0);
@@ -1615,7 +1740,10 @@ impl Graph {
                 if !cost_so_far.contains_key(&next) || new_cost < *cost_so_far.get(&next).unwrap() {
                     cost_so_far.insert(next, new_cost);
                     let priority = new_cost + heuristic(next, to);
-                    pq.push(QueueItem { coord: next, priority });
+                    pq.push(QueueItem {
+                        coord: next,
+                        priority,
+                    });
                     came_from.insert(next, Some(current));
                 }
             }
@@ -1668,8 +1796,26 @@ fn merge_path(path: Vec<GridCoord>) -> Vec<GridCoord> {
     let mut step0 = path[0];
     let mut step1 = path[1];
     for (idx, step2) in path.iter().skip(2).enumerate() {
-        let prev_dir = determine_direction(GenericCoord { x: step0.x, y: step0.y }, GenericCoord { x: step1.x, y: step1.y });
-        let dir = determine_direction(GenericCoord { x: step1.x, y: step1.y }, GenericCoord { x: step2.x, y: step2.y });
+        let prev_dir = determine_direction(
+            GenericCoord {
+                x: step0.x,
+                y: step0.y,
+            },
+            GenericCoord {
+                x: step1.x,
+                y: step1.y,
+            },
+        );
+        let dir = determine_direction(
+            GenericCoord {
+                x: step1.x,
+                y: step1.y,
+            },
+            GenericCoord {
+                x: step2.x,
+                y: step2.y,
+            },
+        );
         if prev_dir == dir {
             remove.insert(idx + 1);
         }
@@ -1685,17 +1831,9 @@ fn merge_path(path: Vec<GridCoord>) -> Vec<GridCoord> {
 
 fn determine_direction(from: GenericCoord, to: GenericCoord) -> Direction {
     if from.x == to.x {
-        if from.y < to.y {
-            DOWN
-        } else {
-            UP
-        }
+        if from.y < to.y { DOWN } else { UP }
     } else if from.y == to.y {
-        if from.x < to.x {
-            RIGHT
-        } else {
-            LEFT
-        }
+        if from.x < to.x { RIGHT } else { LEFT }
     } else if from.x < to.x {
         if from.y < to.y {
             LOWER_RIGHT
@@ -1728,8 +1866,14 @@ fn determine_start_and_end_dir(
     let from_coord = graph.nodes[edge.from].grid_coord.unwrap();
     let to_coord = graph.nodes[edge.to].grid_coord.unwrap();
     let d = determine_direction(
-        GenericCoord { x: from_coord.x, y: from_coord.y },
-        GenericCoord { x: to_coord.x, y: to_coord.y },
+        GenericCoord {
+            x: from_coord.x,
+            y: from_coord.y,
+        },
+        GenericCoord {
+            x: to_coord.x,
+            y: to_coord.y,
+        },
     );
     let is_backwards = if graph_direction == "LR" {
         d == LEFT || d == UPPER_LEFT || d == LOWER_LEFT
@@ -1737,7 +1881,8 @@ fn determine_start_and_end_dir(
         d == UP || d == UPPER_LEFT || d == UPPER_RIGHT
     };
 
-    let (mut preferred_dir, mut preferred_opp, mut alt_dir, mut alt_opp) = (d, d.opposite(), d, d.opposite());
+    let (mut preferred_dir, mut preferred_opp, mut alt_dir, mut alt_opp) =
+        (d, d.opposite(), d, d.opposite());
     match d {
         dir if dir == LOWER_RIGHT => {
             if graph_direction == "LR" {
@@ -1857,7 +2002,11 @@ fn draw_box(node: &Node, graph: &Graph) -> Drawing {
     let name_len = node.name.chars().count() as i32;
     let text_x = w / 2 - ceil_div(name_len, 2) + 1;
     for (i, ch) in node.name.chars().enumerate() {
-        let wrapped = wrap_text_in_color(ch.to_string(), node.style_class.styles.get("color"), &graph.style_type);
+        let wrapped = wrap_text_in_color(
+            ch.to_string(),
+            node.style_class.styles.get("color"),
+            &graph.style_type,
+        );
         set_cell(&mut drawing, text_x + i as i32, text_y, &wrapped);
     }
     drawing
@@ -1997,23 +2146,156 @@ fn set_cell(drawing: &mut Drawing, x: i32, y: i32, value: &str) {
     if x > max_x || y > max_y {
         increase_size(drawing, x, y);
     }
-    if let Some(cell) = drawing.get_mut(x as usize).and_then(|col| col.get_mut(y as usize)) {
+    if let Some(cell) = drawing
+        .get_mut(x as usize)
+        .and_then(|col| col.get_mut(y as usize))
+    {
         *cell = value.to_string();
     }
 }
 
 fn merge_junctions(c1: &str, c2: &str) -> String {
     let mut map = HashMap::new();
-    map.insert("─", vec![("│", "┼"), ("┌", "┬"), ("┐", "┬"), ("└", "┴"), ("┘", "┴"), ("├", "┼"), ("┤", "┼"), ("┬", "┬"), ("┴", "┴")]);
-    map.insert("│", vec![("─", "┼"), ("┌", "├"), ("┐", "┤"), ("└", "├"), ("┘", "┤"), ("├", "├"), ("┤", "┤"), ("┬", "┼"), ("┴", "┼")]);
-    map.insert("┌", vec![("─", "┬"), ("│", "├"), ("┐", "┬"), ("└", "├"), ("┘", "┼"), ("├", "├"), ("┤", "┼"), ("┬", "┬"), ("┴", "┼")]);
-    map.insert("┐", vec![("─", "┬"), ("│", "┤"), ("┌", "┬"), ("└", "┼"), ("┘", "┤"), ("├", "┼"), ("┤", "┤"), ("┬", "┬"), ("┴", "┼")]);
-    map.insert("└", vec![("─", "┴"), ("│", "├"), ("┌", "├"), ("┐", "┼"), ("┘", "┴"), ("├", "├"), ("┤", "┼"), ("┬", "┼"), ("┴", "┴")]);
-    map.insert("┘", vec![("─", "┴"), ("│", "┤"), ("┌", "┼"), ("┐", "┤"), ("└", "┴"), ("├", "┼"), ("┤", "┤"), ("┬", "┼"), ("┴", "┴")]);
-    map.insert("├", vec![("─", "┼"), ("│", "├"), ("┌", "├"), ("┐", "┼"), ("└", "├"), ("┘", "┼"), ("┤", "┼"), ("┬", "┼"), ("┴", "┼")]);
-    map.insert("┤", vec![("─", "┼"), ("│", "┤"), ("┌", "┼"), ("┐", "┤"), ("└", "┼"), ("┘", "┤"), ("├", "┼"), ("┬", "┼"), ("┴", "┼")]);
-    map.insert("┬", vec![("─", "┬"), ("│", "┼"), ("┌", "┬"), ("┐", "┬"), ("└", "┼"), ("┘", "┼"), ("├", "┼"), ("┤", "┼"), ("┴", "┼")]);
-    map.insert("┴", vec![("─", "┴"), ("│", "┼"), ("┌", "┼"), ("┐", "┼"), ("└", "┴"), ("┘", "┴"), ("├", "┼"), ("┤", "┼"), ("┬", "┼")]);
+    map.insert(
+        "─",
+        vec![
+            ("│", "┼"),
+            ("┌", "┬"),
+            ("┐", "┬"),
+            ("└", "┴"),
+            ("┘", "┴"),
+            ("├", "┼"),
+            ("┤", "┼"),
+            ("┬", "┬"),
+            ("┴", "┴"),
+        ],
+    );
+    map.insert(
+        "│",
+        vec![
+            ("─", "┼"),
+            ("┌", "├"),
+            ("┐", "┤"),
+            ("└", "├"),
+            ("┘", "┤"),
+            ("├", "├"),
+            ("┤", "┤"),
+            ("┬", "┼"),
+            ("┴", "┼"),
+        ],
+    );
+    map.insert(
+        "┌",
+        vec![
+            ("─", "┬"),
+            ("│", "├"),
+            ("┐", "┬"),
+            ("└", "├"),
+            ("┘", "┼"),
+            ("├", "├"),
+            ("┤", "┼"),
+            ("┬", "┬"),
+            ("┴", "┼"),
+        ],
+    );
+    map.insert(
+        "┐",
+        vec![
+            ("─", "┬"),
+            ("│", "┤"),
+            ("┌", "┬"),
+            ("└", "┼"),
+            ("┘", "┤"),
+            ("├", "┼"),
+            ("┤", "┤"),
+            ("┬", "┬"),
+            ("┴", "┼"),
+        ],
+    );
+    map.insert(
+        "└",
+        vec![
+            ("─", "┴"),
+            ("│", "├"),
+            ("┌", "├"),
+            ("┐", "┼"),
+            ("┘", "┴"),
+            ("├", "├"),
+            ("┤", "┼"),
+            ("┬", "┼"),
+            ("┴", "┴"),
+        ],
+    );
+    map.insert(
+        "┘",
+        vec![
+            ("─", "┴"),
+            ("│", "┤"),
+            ("┌", "┼"),
+            ("┐", "┤"),
+            ("└", "┴"),
+            ("├", "┼"),
+            ("┤", "┤"),
+            ("┬", "┼"),
+            ("┴", "┴"),
+        ],
+    );
+    map.insert(
+        "├",
+        vec![
+            ("─", "┼"),
+            ("│", "├"),
+            ("┌", "├"),
+            ("┐", "┼"),
+            ("└", "├"),
+            ("┘", "┼"),
+            ("┤", "┼"),
+            ("┬", "┼"),
+            ("┴", "┼"),
+        ],
+    );
+    map.insert(
+        "┤",
+        vec![
+            ("─", "┼"),
+            ("│", "┤"),
+            ("┌", "┼"),
+            ("┐", "┤"),
+            ("└", "┼"),
+            ("┘", "┤"),
+            ("├", "┼"),
+            ("┬", "┼"),
+            ("┴", "┼"),
+        ],
+    );
+    map.insert(
+        "┬",
+        vec![
+            ("─", "┬"),
+            ("│", "┼"),
+            ("┌", "┬"),
+            ("┐", "┬"),
+            ("└", "┼"),
+            ("┘", "┼"),
+            ("├", "┼"),
+            ("┤", "┼"),
+            ("┴", "┼"),
+        ],
+    );
+    map.insert(
+        "┴",
+        vec![
+            ("─", "┴"),
+            ("│", "┼"),
+            ("┌", "┼"),
+            ("┐", "┼"),
+            ("└", "┴"),
+            ("┘", "┴"),
+            ("├", "┼"),
+            ("┤", "┼"),
+            ("┬", "┼"),
+        ],
+    );
 
     if let Some(entries) = map.get(c1) {
         for (other, merged) in entries {
@@ -2028,11 +2310,29 @@ fn merge_junctions(c1: &str, c2: &str) -> String {
 fn is_junction_char(c: &str) -> bool {
     matches!(
         c,
-        "─" | "│" | "┌" | "┐" | "└" | "┘" | "├" | "┤" | "┬" | "┴" | "┼" | "╴" | "╵" | "╶" | "╷"
+        "─" | "│"
+            | "┌"
+            | "┐"
+            | "└"
+            | "┘"
+            | "├"
+            | "┤"
+            | "┬"
+            | "┴"
+            | "┼"
+            | "╴"
+            | "╵"
+            | "╶"
+            | "╷"
     )
 }
 
-fn merge_drawings(base: &Drawing, offset: DrawingCoord, drawings: &[Drawing], use_ascii: bool) -> Drawing {
+fn merge_drawings(
+    base: &Drawing,
+    offset: DrawingCoord,
+    drawings: &[Drawing],
+    use_ascii: bool,
+) -> Drawing {
     let (mut max_x, mut max_y) = get_drawing_size(base);
     for drawing in drawings {
         let (x, y) = get_drawing_size(drawing);
@@ -2069,7 +2369,12 @@ fn merge_drawings(base: &Drawing, offset: DrawingCoord, drawings: &[Drawing], us
 }
 
 impl Graph {
-    fn merge_drawings(&self, base: &Drawing, offset: DrawingCoord, drawings: &[Drawing]) -> Drawing {
+    fn merge_drawings(
+        &self,
+        base: &Drawing,
+        offset: DrawingCoord,
+        drawings: &[Drawing],
+    ) -> Drawing {
         merge_drawings(base, offset, drawings, self.use_ascii)
     }
 }
@@ -2091,7 +2396,14 @@ fn draw_text_on_line(drawing: &mut Drawing, line: &[DrawingCoord], label: &str) 
     let middle_x = min_x + (max_x - min_x) / 2;
     let middle_y = min_y + (max_y - min_y) / 2;
     let start_x = middle_x - (label.chars().count() as i32) / 2;
-    draw_text(drawing, DrawingCoord { x: start_x, y: middle_y }, label);
+    draw_text(
+        drawing,
+        DrawingCoord {
+            x: start_x,
+            y: middle_y,
+        },
+        label,
+    );
 }
 
 fn draw_text(drawing: &mut Drawing, start: DrawingCoord, text: &str) {
@@ -2147,29 +2459,22 @@ fn debug_coord_wrapper(drawing: &Drawing, graph: &Graph) -> Drawing {
         curr_y += h;
     }
 
-    merge_drawings(&debug, DrawingCoord { x: 1, y: 1 }, &[drawing.clone()], graph.use_ascii)
+    merge_drawings(
+        &debug,
+        DrawingCoord { x: 1, y: 1 },
+        &[drawing.clone()],
+        graph.use_ascii,
+    )
 }
 
 fn min(x: i32, y: i32) -> i32 {
-    if x < y {
-        x
-    } else {
-        y
-    }
+    if x < y { x } else { y }
 }
 
 fn max(x: i32, y: i32) -> i32 {
-    if x > y {
-        x
-    } else {
-        y
-    }
+    if x > y { x } else { y }
 }
 
 fn ceil_div(x: i32, y: i32) -> i32 {
-    if x % y == 0 {
-        x / y
-    } else {
-        x / y + 1
-    }
+    if x % y == 0 { x / y } else { x / y + 1 }
 }

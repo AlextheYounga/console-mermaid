@@ -1,4 +1,4 @@
-use crate::diagram::{remove_comments, split_lines, Config, Diagram};
+use crate::diagram::{Config, Diagram, remove_comments, split_lines};
 use regex::Regex;
 use unicode_width::UnicodeWidthStr;
 
@@ -161,7 +161,11 @@ pub fn parse(input: &str) -> Result<SequenceDiagram, String> {
             let label = caps.get(3).map(|m| m.as_str()).unwrap_or("");
             let label = if label.is_empty() { id } else { label };
             if participants.contains_key(id) {
-                return Err(format!("line {}: duplicate participant \"{}\"", idx + 2, id));
+                return Err(format!(
+                    "line {}: duplicate participant \"{}\"",
+                    idx + 2,
+                    id
+                ));
             }
             let participant = Participant {
                 id: id.to_string(),
@@ -485,7 +489,10 @@ fn render_self_message(
     }
 
     if !label.is_empty() {
-        let mut line = ensure_width(build_lifeline(layout, chars), layout.total_width as usize + width + 1);
+        let mut line = ensure_width(
+            build_lifeline(layout, chars),
+            layout.total_width as usize + width + 1,
+        );
         let start = center + LABEL_LEFT_MARGIN as usize;
         let label_width = UnicodeWidthStr::width(label.as_str()) as usize;
         let needed = start + label_width + LABEL_BUFFER_SPACE as usize;
@@ -502,7 +509,10 @@ fn render_self_message(
         lines.push(rtrim(&line));
     }
 
-    let mut l1 = ensure_width(build_lifeline(layout, chars), layout.total_width as usize + width + 1);
+    let mut l1 = ensure_width(
+        build_lifeline(layout, chars),
+        layout.total_width as usize + width + 1,
+    );
     l1[center] = chars.tee_right;
     for i in 1..width {
         l1[center + i] = chars.horizontal;
@@ -510,11 +520,17 @@ fn render_self_message(
     l1[center + width - 1] = chars.self_top_right;
     lines.push(rtrim(&l1));
 
-    let mut l2 = ensure_width(build_lifeline(layout, chars), layout.total_width as usize + width + 1);
+    let mut l2 = ensure_width(
+        build_lifeline(layout, chars),
+        layout.total_width as usize + width + 1,
+    );
     l2[center + width - 1] = chars.vertical;
     lines.push(rtrim(&l2));
 
-    let mut l3 = ensure_width(build_lifeline(layout, chars), layout.total_width as usize + width + 1);
+    let mut l3 = ensure_width(
+        build_lifeline(layout, chars),
+        layout.total_width as usize + width + 1,
+    );
     l3[center] = chars.vertical;
     l3[center + 1] = chars.arrow_left;
     for i in 2..(width - 1) {
