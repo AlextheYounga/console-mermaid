@@ -37,3 +37,7 @@ __trash__
 *~
 *.swp
 *.swo
+
+# Custom
+.agent
+__trash__
