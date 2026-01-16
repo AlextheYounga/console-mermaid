@@ -338,15 +338,6 @@ impl Graph {
         coord
     }
 
-    pub(crate) fn get_edges_from_node(&self, node_idx: usize) -> Vec<usize> {
-        self.edges
-            .iter()
-            .enumerate()
-            .filter(|(_, edge)| edge.from == node_idx)
-            .map(|(idx, _)| idx)
-            .collect()
-    }
-
     pub(crate) fn get_children(&self, node_idx: usize) -> Vec<usize> {
         self.edges
             .iter()

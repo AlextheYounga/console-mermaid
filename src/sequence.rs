@@ -4,7 +4,6 @@ use unicode_width::UnicodeWidthStr;
 
 const SEQUENCE_DIAGRAM_KEYWORD: &str = "sequenceDiagram";
 const SOLID_ARROW_SYNTAX: &str = "->>";
-const DOTTED_ARROW_SYNTAX: &str = "-->>";
 
 #[derive(Debug, Clone, Copy)]
 pub enum ArrowType {

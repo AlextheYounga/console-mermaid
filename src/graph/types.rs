@@ -97,13 +97,6 @@ impl DrawingCoord {
     pub(crate) fn equals(&self, other: DrawingCoord) -> bool {
         self.x == other.x && self.y == other.y
     }
-
-    pub(crate) fn direction(&self, dir: Direction) -> DrawingCoord {
-        DrawingCoord {
-            x: self.x + dir.dx,
-            y: self.y + dir.dy,
-        }
-    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
