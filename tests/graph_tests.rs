@@ -1,4 +1,4 @@
-mod testutil;
+mod graph_testutil;
 
 use console_mermaid::diagram::Config;
 use console_mermaid::render_diagram;
@@ -6,7 +6,7 @@ use std::fs;
 use std::path::Path;
 
 fn verify_map<P: AsRef<Path>>(path: P, use_ascii: bool) {
-    let tc = testutil::read_test_case(path).expect("read test case");
+    let tc = graph_testutil::read_test_case(path).expect("read test case");
     let mut config = Config::default_config();
     config.use_ascii = use_ascii;
     config.padding_between_x = tc.padding_x;
@@ -15,8 +15,8 @@ fn verify_map<P: AsRef<Path>>(path: P, use_ascii: bool) {
 
     let output = render_diagram(&tc.mermaid, &config).expect("render diagram");
     if tc.expected != output {
-        let expected = testutil::visualize_whitespace(&tc.expected);
-        let actual = testutil::visualize_whitespace(&output);
+        let expected = graph_testutil::visualize_whitespace(&tc.expected);
+        let actual = graph_testutil::visualize_whitespace(&output);
         panic!(
             "Map didn't match\nExpected:\n{}\nActual:\n{}",
             expected, actual

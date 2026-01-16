@@ -1,20 +1,20 @@
-mod testutil;
+mod sequence_testutil;
 
 use console_mermaid::diagram::Config;
 use console_mermaid::sequence::{parse, render};
 use std::path::Path;
 
 fn verify_sequence<P: AsRef<Path>>(path: P, use_ascii: bool) {
-    let tc = testutil::read_sequence_test_case(path).expect("read sequence test");
+    let tc = sequence_testutil::read_sequence_test_case(path).expect("read sequence test");
     let diagram = parse(&tc.mermaid).expect("parse sequence");
     let config = Config::new_test_config(use_ascii, "cli");
     let output = render(&diagram, &config).expect("render sequence");
 
-    let expected = testutil::normalize_whitespace(&tc.expected);
-    let actual = testutil::normalize_whitespace(&output);
+    let expected = sequence_testutil::normalize_whitespace(&tc.expected);
+    let actual = sequence_testutil::normalize_whitespace(&output);
     if expected != actual {
-        let expected_dbg = testutil::visualize_whitespace(&expected);
-        let actual_dbg = testutil::visualize_whitespace(&actual);
+        let expected_dbg = sequence_testutil::visualize_whitespace(&expected);
+        let actual_dbg = sequence_testutil::visualize_whitespace(&actual);
         panic!(
             "Sequence diagram mismatch\nExpected:\n{}\nActual:\n{}",
             expected_dbg, actual_dbg
@@ -78,7 +78,7 @@ fn test_sequence_ascii_smoke() {
     ];
 
     for file in files {
-        let tc = testutil::read_sequence_test_case(base.join(file)).expect("read test");
+        let tc = sequence_testutil::read_sequence_test_case(base.join(file)).expect("read test");
         let diagram = parse(&tc.mermaid).expect("parse");
         let config = Config::new_test_config(true, "cli");
         let output = render(&diagram, &config).expect("render");
