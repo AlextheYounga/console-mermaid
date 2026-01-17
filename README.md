@@ -2,7 +2,7 @@
 
 Render Mermaid diagrams as ASCII/Unicode in the terminal.
 
-This is a Rust port of the original Go project and focuses on producing readable, deterministic console output for flowcharts and sequence diagrams.
+This is a Rust port of the original Go [mermaid-ascii](https://github.com/AlexanderGrooff/mermaid-ascii) project by AlexanderGrooff, and focuses on producing readable, deterministic console output for flowcharts and sequence diagrams.
 
 ## Features
 
