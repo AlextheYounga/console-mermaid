@@ -33,6 +33,7 @@ pub(crate) fn mermaid_to_graph_properties(
     let mut properties = GraphProperties {
         data: IndexMap::new(),
         style_classes: std::collections::HashMap::new(),
+        node_labels: std::collections::HashMap::new(),
         graph_direction: String::new(),
         style_type: style_type.to_string(),
         padding_x: config.padding_between_x,
@@ -119,11 +120,11 @@ pub(crate) fn mermaid_to_graph_properties(
 
         if let Ok(nodes) = properties.parse_string(&line) {
             for node in nodes {
-                add_node(&node, &mut properties.data);
+                add_node(&node, &mut properties.data, &mut properties.node_labels);
             }
         } else {
             let node = parse_node(&line);
-            add_node(&node, &mut properties.data);
+            add_node(&node, &mut properties.data, &mut properties.node_labels);
         }
 
         if !subgraph_stack.is_empty() {
@@ -166,7 +167,12 @@ impl GraphProperties {
             let right_nodes = self
                 .parse_string(rhs)
                 .unwrap_or_else(|_| vec![parse_node(rhs)]);
-            return Ok(set_arrow(&left_nodes, &right_nodes, &mut self.data));
+            return Ok(set_arrow(
+                &left_nodes,
+                &right_nodes,
+                &mut self.data,
+                &mut self.node_labels,
+            ));
         }
 
         if let Some(caps) = label_re.captures(line) {
@@ -184,6 +190,7 @@ impl GraphProperties {
                 &right_nodes,
                 label,
                 &mut self.data,
+                &mut self.node_labels,
             ));
         }
 
@@ -217,16 +224,61 @@ fn parse_node(line: &str) -> TextNode {
     let trimmed = line.trim();
     let node_re = Regex::new(r"^(.+):::(.+)$").unwrap();
     if let Some(caps) = node_re.captures(trimmed) {
+        let raw_name = caps.get(1).unwrap().as_str().trim();
+        let (name, label) = parse_node_label(raw_name);
         TextNode {
-            name: caps.get(1).unwrap().as_str().trim().to_string(),
+            name,
+            label,
             style_class: caps.get(2).unwrap().as_str().trim().to_string(),
         }
     } else {
+        let (name, label) = parse_node_label(trimmed);
         TextNode {
-            name: trimmed.to_string(),
+            name,
+            label,
             style_class: String::new(),
         }
     }
+}
+
+fn parse_node_label(input: &str) -> (String, String) {
+    let trimmed = input.trim();
+    let mut chars = trimmed.char_indices();
+    let split_idx = loop {
+        match chars.next() {
+            Some((idx, '[')) => break Some((idx, ']')),
+            Some((idx, '(')) => break Some((idx, ')')),
+            Some((idx, '{')) => break Some((idx, '}')),
+            Some(_) => continue,
+            None => break None,
+        }
+    };
+
+    let (start_idx, close_char) = match split_idx {
+        Some(value) => value,
+        None => return (trimmed.to_string(), trimmed.to_string()),
+    };
+
+    let name = trimmed[..start_idx].trim();
+    if name.is_empty() {
+        return (trimmed.to_string(), trimmed.to_string());
+    }
+
+    let label_start = start_idx + 1;
+    let label_end = trimmed.rfind(close_char).unwrap_or(label_start);
+    if label_end <= label_start {
+        return (name.to_string(), name.to_string());
+    }
+
+    let mut label = trimmed[label_start..label_end].trim();
+    if (label.starts_with('"') && label.ends_with('"'))
+        || (label.starts_with('\'') && label.ends_with('\''))
+    {
+        label = label[1..label.len() - 1].trim();
+    }
+
+    let final_label = if label.is_empty() { name } else { label };
+    (name.to_string(), final_label.to_string())
 }
 
 fn parse_style_class(name: &str, styles: &str) -> StyleClass {
@@ -248,6 +300,7 @@ fn set_arrow_with_label(
     rhs: &[TextNode],
     label: &str,
     data: &mut IndexMap<String, Vec<TextEdge>>,
+    node_labels: &mut std::collections::HashMap<String, String>,
 ) -> Vec<TextNode> {
     debug!(
         "Setting arrow from {:?} to {:?} with label {}",
@@ -263,6 +316,7 @@ fn set_arrow_with_label(
                     label: label.to_string(),
                 },
                 data,
+                node_labels,
             );
         }
     }
@@ -273,17 +327,28 @@ fn set_arrow(
     lhs: &[TextNode],
     rhs: &[TextNode],
     data: &mut IndexMap<String, Vec<TextEdge>>,
+    node_labels: &mut std::collections::HashMap<String, String>,
 ) -> Vec<TextNode> {
-    set_arrow_with_label(lhs, rhs, "", data)
+    set_arrow_with_label(lhs, rhs, "", data, node_labels)
 }
 
-fn add_node(node: &TextNode, data: &mut IndexMap<String, Vec<TextEdge>>) {
+fn add_node(
+    node: &TextNode,
+    data: &mut IndexMap<String, Vec<TextEdge>>,
+    node_labels: &mut std::collections::HashMap<String, String>,
+) {
     if !data.contains_key(&node.name) {
         data.insert(node.name.clone(), Vec::new());
     }
+    register_label(node, node_labels);
 }
 
-fn set_data(parent: &TextNode, edge: TextEdge, data: &mut IndexMap<String, Vec<TextEdge>>) {
+fn set_data(
+    parent: &TextNode,
+    edge: TextEdge,
+    data: &mut IndexMap<String, Vec<TextEdge>>,
+    node_labels: &mut std::collections::HashMap<String, String>,
+) {
     if let Some(children) = data.get_mut(&parent.name) {
         children.push(edge.clone());
     } else {
@@ -291,5 +356,16 @@ fn set_data(parent: &TextNode, edge: TextEdge, data: &mut IndexMap<String, Vec<T
     }
     if !data.contains_key(&edge.child.name) {
         data.insert(edge.child.name.clone(), Vec::new());
+    }
+    register_label(parent, node_labels);
+    register_label(&edge.child, node_labels);
+}
+
+fn register_label(node: &TextNode, node_labels: &mut std::collections::HashMap<String, String>) {
+    let entry = node_labels
+        .entry(node.name.clone())
+        .or_insert_with(|| node.label.clone());
+    if node.label != node.name {
+        *entry = node.label.clone();
     }
 }

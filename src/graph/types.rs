@@ -6,6 +6,7 @@ use std::hash::{Hash, Hasher};
 #[derive(Debug, Clone)]
 pub(crate) struct TextNode {
     pub(crate) name: String,
+    pub(crate) label: String,
     pub(crate) style_class: String,
 }
 
@@ -28,6 +29,7 @@ pub(crate) struct TextSubgraph {
 pub(crate) struct GraphProperties {
     pub(crate) data: IndexMap<String, Vec<TextEdge>>,
     pub(crate) style_classes: HashMap<String, StyleClass>,
+    pub(crate) node_labels: HashMap<String, String>,
     pub(crate) graph_direction: String,
     pub(crate) style_type: String,
     pub(crate) padding_x: i32,
@@ -137,6 +139,7 @@ pub(crate) type Drawing = Vec<Vec<String>>;
 #[derive(Debug, Clone)]
 pub(crate) struct Node {
     pub(crate) name: String,
+    pub(crate) label: String,
     pub(crate) drawing: Option<Drawing>,
     pub(crate) drawing_coord: Option<DrawingCoord>,
     pub(crate) grid_coord: Option<GridCoord>,

@@ -27,10 +27,20 @@ pub(crate) fn mk_graph(properties: &GraphProperties) -> Graph {
     };
 
     for (node_name, children) in &properties.data {
-        let (parent_idx, _) = graph.get_or_insert_node(node_name, "");
+        let parent_label = properties
+            .node_labels
+            .get(node_name)
+            .cloned()
+            .unwrap_or_else(|| node_name.clone());
+        let (parent_idx, _) = graph.get_or_insert_node(node_name, &parent_label, "");
         for edge in children {
+            let child_label = properties
+                .node_labels
+                .get(&edge.child.name)
+                .cloned()
+                .unwrap_or_else(|| edge.child.label.clone());
             let (child_idx, inserted) =
-                graph.get_or_insert_node(&edge.child.name, &edge.get_child_style());
+                graph.get_or_insert_node(&edge.child.name, &child_label, &edge.get_child_style());
             if inserted {
                 graph.nodes[parent_idx].style_class_name = edge.parent.style_class.clone();
             }
@@ -50,13 +60,24 @@ pub(crate) fn mk_graph(properties: &GraphProperties) -> Graph {
 }
 
 impl Graph {
-    pub(crate) fn get_or_insert_node(&mut self, name: &str, style_class: &str) -> (usize, bool) {
+    pub(crate) fn get_or_insert_node(
+        &mut self,
+        name: &str,
+        label: &str,
+        style_class: &str,
+    ) -> (usize, bool) {
         if let Some(idx) = self.node_index_by_name.get(name) {
+            if let Some(node) = self.nodes.get_mut(*idx) {
+                if label != name {
+                    node.label = label.to_string();
+                }
+            }
             return (*idx, false);
         }
         let idx = self.nodes.len();
         self.nodes.push(crate::graph::types::Node {
             name: name.to_string(),
+            label: label.to_string(),
             drawing: None,
             drawing_coord: None,
             grid_coord: None,
@@ -264,7 +285,7 @@ impl Graph {
     pub(crate) fn set_column_width(&mut self, idx: usize) {
         let node = &self.nodes[idx];
         let grid_coord = node.grid_coord.unwrap();
-        let name_len = node.name.chars().count() as i32;
+        let name_len = node.label.chars().count() as i32;
         let col1 = 1;
         let col2 = 2 * self.box_border_padding + name_len;
         let col3 = 1;

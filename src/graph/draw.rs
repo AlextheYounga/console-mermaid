@@ -558,9 +558,9 @@ pub(crate) fn draw_box(node: &Node, graph: &Graph) -> Drawing {
     }
 
     let text_y = h / 2;
-    let name_len = node.name.chars().count() as i32;
+    let name_len = node.label.chars().count() as i32;
     let text_x = w / 2 - ceil_div(name_len, 2) + 1;
-    for (i, ch) in node.name.chars().enumerate() {
+    for (i, ch) in node.label.chars().enumerate() {
         let wrapped = wrap_text_in_color(
             ch.to_string(),
             node.style_class.styles.get("color"),

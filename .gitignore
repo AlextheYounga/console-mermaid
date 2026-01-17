@@ -41,3 +41,5 @@ __trash__
 # Custom
 .agent
 __trash__
+out
+out/*
