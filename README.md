@@ -25,6 +25,14 @@ Run directly:
 cargo run -- --help
 ```
 
+Install globally with Cargo:
+
+```bash
+cargo install --git https://github.com/AlextheYounga/console-mermaid.git
+```
+
+Make sure Cargo's bin directory is on your `PATH` (usually `~/.cargo/bin`).
+
 ## Usage
 
 ```bash
